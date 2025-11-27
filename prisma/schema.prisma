@@ -1,0 +1,243 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  password      String?
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+  members       Member[]
+
+  role       String?
+  banned     Boolean?
+  banReason  String?
+  banExpires DateTime?
+
+  approvedFinances Finance[]    @relation("FinanceApprovedBy")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String?
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @default(cuid())
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String    @default(cuid())
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+// ==================== MODELS ==================== //
+
+model Member {
+  id               String       @id @default(cuid())
+  userId           String?
+  firstName        String
+  lastName         String?
+  email            String?      @unique
+  phone            String?      @unique
+  role             Role         @default(MEMBER)
+  address          String?
+  status           MemberStatus @default(ACTIVE)
+  user             User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Relations
+  finances         Finance[]    @relation("MemberFinances")
+ 
+  attendances      Attendance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  date      DateTime         @default(now())
+  memberId  String?
+  status    AttendanceStatus @default(PRESENT)
+  firstname String? // For first timers
+  lastname  String? // For first timers
+
+  member Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Finance {
+  id          String        @id @default(cuid())
+  type        FinanceType
+  category    String?
+  description String?
+  amount      Float
+  currency    Currency      @default(GHS)
+  paymentType PaymentType
+  status      FinanceStatus @default(COMPLETED)
+
+  date         DateTime @default(now())
+  memberId     String?
+  approvedById String?
+  reference    String?  
+  reconciled   Boolean  @default(false)
+  receiptUrl   String?  @unique
+  fund         String?
+  notes        String?
+
+  firstname String?
+  lastname  String?
+
+  // Relations
+  member     Member? @relation("MemberFinances", fields: [memberId], references: [id], onDelete: SetNull)
+  approvedBy User? @relation("FinanceApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+model Prospect {
+  id        String  @id @default(cuid())
+  firstName String
+  lastName  String?
+  phone     String?
+  email     String?
+  invitedBy String? // who brought them
+  notes     String? // discipleship notes
+  converted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model ScheduledSMS {
+  id           String     @id @default(cuid())
+  message      String
+  recipients   String
+  scheduledFor DateTime
+  dayOfWeek    Int?       // 0 = Sunday, 1 = Monday ... 6 = Saturday
+  status       SMSStatus  @default(PENDING)
+  isRecurring  Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+     @@index([scheduledFor])
+  @@index([status])
+}
+
+// ==================== ENUMS ==================== //
+
+enum Role {
+  PASTOR
+  USHER
+  LEADER
+  TREASURER
+  SECRETARY
+  DEACON
+  CHOIR
+  FINANCIAL_SECRETARY
+  MEMBER
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  BLOCKED
+}
+
+enum SMSStatus {
+  PENDING
+  SENT
+  CANCELLED
+  FAILED
+}
+
+enum RecurrenceType {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+enum FinanceType {
+  TITHE
+  OFFERING
+  DONATION
+  EXPENSE
+  PLEDGE
+}
+
+enum PaymentType {
+  CASH
+  MOBILE_MONEY
+  BANK
+}
+
+enum FinanceStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum Currency {
+  GHS
+  USD
+  EUR
+}
