@@ -11,7 +11,7 @@ import {
 } from "@prisma/client";
 // import { generateFinanceReference } from "./finance.util";
 
-export const getFinances = async (page: number = 1, limit: number = 10) => {
+export const getFinances = async (page: number = 1, limit: number = 50) => {
   const finances = await prisma.finance.findMany({
     orderBy: {
       date: "desc",

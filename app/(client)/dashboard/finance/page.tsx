@@ -17,7 +17,7 @@ import {
 
 const FinancePage = () => {
   const [page, setPage] = useState(1);
-  const { data: finances, isLoading } = useFinances(page, 10);
+  const { data: finances, isLoading } = useFinances(page, 50);
 
   return (
     <div>

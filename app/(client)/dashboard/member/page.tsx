@@ -10,7 +10,7 @@ import { useState } from "react";
 
 const MembersPage = () => {
   const [page, setPage] = useState(1);
-  const { data: members, isLoading } = useMembers(page, 10);
+  const { data: members, isLoading } = useMembers(page, 50);
 
   return (
     <div>

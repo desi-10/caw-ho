@@ -18,6 +18,7 @@ type MemberTable = {
   phone?: string;
   address?: string;
   image?: string | null;
+  gender?: string;
 };
 
 export const columns: ColumnDef<MemberTable>[] = [
@@ -73,6 +74,14 @@ export const columns: ColumnDef<MemberTable>[] = [
     header: "Last Name",
     cell: ({ row }) => (
       <div className="truncate w-44">{row.original.lastName}</div>
+    ),
+  },
+  {
+    id: "gender",
+    accessorKey: "gender",
+    header: "Gender",
+    cell: ({ row }) => (
+      <div className="truncate w-32">{row.original.gender || "—"}</div>
     ),
   },
   {

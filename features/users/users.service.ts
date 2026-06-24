@@ -6,7 +6,7 @@ import StatusCodes from "http-status-codes";
 import { ApiError } from "@/utils/api-error";
 import { TypeUserData } from "./users.validator";
 
-export const getUsers = async (page: number = 1, limit: number = 10) => {
+export const getUsers = async (page: number = 1, limit: number = 50) => {
   const users = await prisma.user.findMany({
     orderBy: {
       createdAt: "desc",

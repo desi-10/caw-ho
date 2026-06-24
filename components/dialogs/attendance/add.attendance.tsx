@@ -27,8 +27,10 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AddAttendance = () => {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
   const {
@@ -56,7 +58,7 @@ const AddAttendance = () => {
 
       setOpen(false);
       reset();
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ["attendances"] });
     } catch (err) {
       if (err instanceof AxiosError) {
         toast.error(

@@ -6,15 +6,15 @@ import { toast } from "sonner";
 export const SMS_KEYS = {
   all: ["sms"] as const,
   lists: () => [...SMS_KEYS.all, "list"] as const,
-  list: (page: number) => [...SMS_KEYS.lists(), page] as const,
+  list: (page: number, limit: number = 50) => [...SMS_KEYS.lists(), page, limit] as const,
 };
 
 /**
  * Hook to fetch paginated SMS list
  */
-export function useSMS(page: number = 1, limit: number = 10) {
+export function useSMS(page: number = 1, limit: number = 50) {
   return useQuery({
-    queryKey: SMS_KEYS.list(page),
+    queryKey: SMS_KEYS.list(page, limit),
     queryFn: () => smsService.getList(page, limit),
     placeholderData: keepPreviousData,
   });

@@ -14,6 +14,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Member = {
   id: string;
@@ -21,6 +28,7 @@ type Member = {
   email: string;
   phone: string;
   address: string;
+  gender: string | null;
 };
 
 type MemberDialogProps = {
@@ -45,6 +53,7 @@ export function MemberDialog({
     email: "",
     phone: "",
     address: "",
+    gender: null as string | null,
   });
 
   React.useEffect(() => {
@@ -54,6 +63,7 @@ export function MemberDialog({
         email: member.email,
         phone: member.phone,
         address: member.address,
+        gender: member.gender,
       });
     } else {
       setFormData({
@@ -61,6 +71,7 @@ export function MemberDialog({
         email: "",
         phone: "",
         address: "",
+        gender: null,
       });
     }
   }, [member, mode]);
@@ -149,6 +160,24 @@ export function MemberDialog({
                   disabled={isViewMode}
                   required={!isViewMode}
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Select
+                  disabled={isViewMode}
+                  value={formData.gender || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, gender: value })
+                  }
+                >
+                  <SelectTrigger id="gender">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MALE">Male</SelectItem>
+                    <SelectItem value="FEMALE">Female</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="address">Address</Label>

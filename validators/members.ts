@@ -6,6 +6,7 @@ export const MemberDataSchema = z.object({
   email: z.email().optional(),
   phone: z.string().optional(),
   address: z.string().optional(),
+  gender: z.enum(["MALE", "FEMALE"]).optional().nullable(),
   image: z.any().optional(),
   userId: z.string().optional(),
 });

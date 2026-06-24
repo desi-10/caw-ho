@@ -46,8 +46,20 @@ export async function GET() {
 
   // ✅ Batch all recipients by message
   const grouped = toSend.reduce((acc, sms) => {
-    acc[sms.message] = acc[sms.message] || [];
-    acc[sms.message].push(...JSON.parse(sms.recipients));
+    const recipients = JSON.parse(sms.recipients);
+    recipients.forEach((recipient: any) => {
+      const phone = typeof recipient === "string" ? recipient : recipient.phone;
+      const name = typeof recipient === "string" ? "" : recipient.name || "";
+      const title = typeof recipient === "string" ? "" : recipient.title || "";
+      let msgToSend = sms.message.replace(/{name}/g, name || "Member");
+      if (title) {
+        msgToSend = msgToSend.replace(/{title}/g, title);
+      } else {
+        msgToSend = msgToSend.replace(/{title}\s?/g, ""); // Remove title placeholder if empty
+      }
+      acc[msgToSend] = acc[msgToSend] || [];
+      acc[msgToSend].push(phone);
+    });
     return acc;
   }, {} as Record<string, string[]>);
 

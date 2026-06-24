@@ -6,15 +6,15 @@ import { toast } from "sonner";
 export const USER_KEYS = {
   all: ["users"] as const,
   lists: () => [...USER_KEYS.all, "list"] as const,
-  list: (page: number) => [...USER_KEYS.lists(), page] as const,
+  list: (page: number, limit: number = 50) => [...USER_KEYS.lists(), page, limit] as const,
 };
 
 /**
  * Hook to fetch paginated users list
  */
-export function useUsers(page: number = 1, limit: number = 10) {
+export function useUsers(page: number = 1, limit: number = 50) {
   return useQuery({
-    queryKey: USER_KEYS.list(page),
+    queryKey: USER_KEYS.list(page, limit),
     queryFn: () => userService.getList(page, limit),
     placeholderData: keepPreviousData,
   });

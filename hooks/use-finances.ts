@@ -11,15 +11,15 @@ import { toast } from "sonner";
 export const FINANCE_KEYS = {
   all: ["finances"] as const,
   lists: () => [...FINANCE_KEYS.all, "list"] as const,
-  list: (page: number) => [...FINANCE_KEYS.lists(), page] as const,
+  list: (page: number, limit: number = 50) => [...FINANCE_KEYS.lists(), page, limit] as const,
 };
 
 /**
  * Hook to fetch paginated finances list
  */
-export function useFinances(page: number = 1, limit: number = 10) {
+export function useFinances(page: number = 1, limit: number = 50) {
   return useQuery({
-    queryKey: FINANCE_KEYS.list(page),
+    queryKey: FINANCE_KEYS.list(page, limit),
     queryFn: () => financeService.getList(page, limit),
     placeholderData: keepPreviousData,
   });

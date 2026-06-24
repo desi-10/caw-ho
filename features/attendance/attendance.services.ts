@@ -5,7 +5,7 @@ import StatusCodes from "http-status-codes";
 import { ApiError } from "@/utils/api-error";
 import { AttendanceStatus } from "@prisma/client";
 
-export const getAttendances = async (page: number = 1, limit: number = 10) => {
+export const getAttendances = async (page: number = 1, limit: number = 50) => {
   const attendances = await prisma.attendance.findMany({
     orderBy: {
       date: "desc",

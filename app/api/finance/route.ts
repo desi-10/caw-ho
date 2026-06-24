@@ -12,7 +12,7 @@ import { StatusCodes } from "http-status-codes";
 export const GET = asyncHandler(async (req: Request) => {
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const limit = parseInt(searchParams.get("limit") || "50", 10);
   const result = await financeService.getFinances(page, limit);
   return NextResponse.json(result);
 });

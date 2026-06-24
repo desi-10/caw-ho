@@ -10,7 +10,7 @@ import { useState } from "react";
 
 const AttendancePage = () => {
   const [page, setPage] = useState(1);
-  const { data: attendances, isLoading } = useAttendances(page, 10);
+  const { data: attendances, isLoading } = useAttendances(page, 50);
 
   return (
     <div>

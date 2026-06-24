@@ -2,7 +2,11 @@ import { z } from "zod";
 
 export const SMSDataSchema = z.object({
   message: z.string().min(1, "Message is required"),
-  recipients: z.array(z.string()).min(1, "At least one recipient is required"),
+  recipients: z.array(z.object({
+    phone: z.string().min(1, "Phone is required"),
+    name: z.string().optional(),
+    title: z.string().optional(),
+  })).min(1, "At least one recipient is required"),
   scheduledFor: z.coerce.date().nullable().optional(),
   dayOfWeek: z
     .number()

@@ -10,7 +10,7 @@ import { useState } from "react";
 
 const UsersPage = () => {
   const [page, setPage] = useState(1);
-  const { data: users, isLoading } = useUsers(page, 10);
+  const { data: users, isLoading } = useUsers(page, 50);
 
   return (
     <div>

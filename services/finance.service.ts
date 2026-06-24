@@ -61,7 +61,7 @@ export const financeService = {
   /**
    * Fetch paginated list of finances
    */
-  getList: async (page: number = 1, limit: number = 10) => {
+  getList: async (page: number = 1, limit: number = 50) => {
     const { data } = await axios.get<FinanceListResponse>(
       `/api/finance?page=${page}&limit=${limit}`
     );

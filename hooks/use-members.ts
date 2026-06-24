@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export const MEMBER_KEYS = {
   all: ["members"] as const,
   lists: () => [...MEMBER_KEYS.all, "list"] as const,
-  list: (page: number) => [...MEMBER_KEYS.lists(), page] as const,
+  list: (page: number, limit: number = 50) => [...MEMBER_KEYS.lists(), page, limit] as const,
   details: () => [...MEMBER_KEYS.all, "detail"] as const,
   detail: (id: string) => [...MEMBER_KEYS.details(), id] as const,
 };
@@ -19,9 +19,9 @@ export const MEMBER_KEYS = {
 /**
  * Hook to fetch paginated members list
  */
-export function useMembers(page: number = 1, limit: number = 10) {
+export function useMembers(page: number = 1, limit: number = 50) {
   return useQuery({
-    queryKey: MEMBER_KEYS.list(page),
+    queryKey: MEMBER_KEYS.list(page, limit),
     queryFn: () => memberService.getList(page, limit),
     placeholderData: keepPreviousData, // Keep old data while fetching new page
   });

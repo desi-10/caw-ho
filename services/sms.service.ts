@@ -39,7 +39,7 @@ export const smsService = {
   /**
    * Fetch paginated list of SMS
    */
-  getList: async (page: number = 1, limit: number = 10) => {
+  getList: async (page: number = 1, limit: number = 50) => {
     const { data } = await axios.get<SMSListResponse>(
       `/api/sms?page=${page}&limit=${limit}`
     );

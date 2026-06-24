@@ -6,15 +6,15 @@ import { toast } from "sonner";
 export const ATTENDANCE_KEYS = {
   all: ["attendances"] as const,
   lists: () => [...ATTENDANCE_KEYS.all, "list"] as const,
-  list: (page: number) => [...ATTENDANCE_KEYS.lists(), page] as const,
+  list: (page: number, limit: number = 50) => [...ATTENDANCE_KEYS.lists(), page, limit] as const,
 };
 
 /**
  * Hook to fetch paginated attendances list
  */
-export function useAttendances(page: number = 1, limit: number = 10) {
+export function useAttendances(page: number = 1, limit: number = 50) {
   return useQuery({
-    queryKey: ATTENDANCE_KEYS.list(page),
+    queryKey: ATTENDANCE_KEYS.list(page, limit),
     queryFn: () => attendanceService.getList(page, limit),
     placeholderData: keepPreviousData,
   });

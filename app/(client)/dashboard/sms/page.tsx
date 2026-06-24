@@ -22,7 +22,7 @@ type SMS = {
 
 const SMSPage = () => {
   const [page, setPage] = useState(1);
-  const { data: sms, isLoading } = useSMS(page, 10);
+  const { data: sms, isLoading } = useSMS(page, 50);
   const deleteSMS = useDeleteSMS();
 
   const handleDelete = async (id: string) => {

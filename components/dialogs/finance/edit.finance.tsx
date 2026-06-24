@@ -23,6 +23,7 @@ import { FinanceDataSchema, TypeofFinanceData } from "@/validators/finance";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EditFinanceProps {
   finance: any;
@@ -37,6 +38,7 @@ const EditFinanceDialog = ({
   onOpenChange,
   onSuccess,
 }: EditFinanceProps) => {
+  const queryClient = useQueryClient();
   const [members, setMembers] = useState<any[]>([]);
   const {
     register,
@@ -71,9 +73,10 @@ const EditFinanceDialog = ({
   }, [finance, setValue]);
 
   useEffect(() => {
+    if (!open) return;
     const fetchMembers = async () => {
       try {
-        const { data } = await axios.get("/api/member?page=1&limit=1000");
+        const { data } = await axios.get("/api/member?page=1&limit=50");
         setMembers(data.data.members);
       } catch (error) {
         console.error("Failed to fetch members:", error);
@@ -81,7 +84,7 @@ const EditFinanceDialog = ({
     };
 
     fetchMembers();
-  }, []);
+  }, [open]);
 
   const onSubmit = async (data: TypeofFinanceData) => {
     try {
@@ -99,7 +102,7 @@ const EditFinanceDialog = ({
         onSuccess?.();
         onOpenChange(false);
         reset();
-        window.location.reload();
+        queryClient.invalidateQueries({ queryKey: ["finances"] });
       }
     } catch (err) {
       if (err instanceof AxiosError) {

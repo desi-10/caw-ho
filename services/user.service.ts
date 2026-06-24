@@ -36,7 +36,7 @@ export const userService = {
   /**
    * Fetch paginated list of users
    */
-  getList: async (page: number = 1, limit: number = 10) => {
+  getList: async (page: number = 1, limit: number = 50) => {
     const { data } = await axios.get<UserListResponse>(
       `/api/user?page=${page}&limit=${limit}`
     );

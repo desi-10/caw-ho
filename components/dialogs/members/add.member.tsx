@@ -17,6 +17,7 @@ import { MemberDataSchema, TypeofMemberData } from "@/validators/members";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import {
   Select,
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/select";
 
 const AddMember = () => {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [members, setMembers] = useState<any>(null);
@@ -55,9 +57,10 @@ const AddMember = () => {
   }, [imageFile]);
 
   useEffect(() => {
+    if (!open) return;
     const fetchUsers = async () => {
       try {
-        const response = await axios.get("/api/user?page=1&limit=1000");
+        const response = await axios.get("/api/user?page=1&limit=50");
         if (response.data.success && response.data.data) {
           setUsers(response.data.data.users || []);
         } else {
@@ -76,7 +79,7 @@ const AddMember = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [open]);
 
   const onSubmit = async (data: TypeofMemberData) => {
     try {
@@ -209,12 +212,36 @@ const AddMember = () => {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || undefined}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MALE">Male</SelectItem>
+                      <SelectItem value="FEMALE">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
           <div className="grid gap-2">
             <Label htmlFor="address">Address</Label>
             <Input type="text" placeholder="Address" {...register("address")} />
             {errors.address && (
               <p className="text-sm text-red-500">{errors.address.message}</p>
             )}
+          </div>
           </div>
 
           <div className="col-span-2 w-full">

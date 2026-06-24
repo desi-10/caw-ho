@@ -39,12 +39,36 @@ export const sendSMS = async (smsData: TypeofSMSData) => {
   }
 
   // 2️⃣ Immediate send
-  await sendArkeselSMS(recipients, message, scheduledFor || new Date());
+  if (message.includes("{name}") || message.includes("{title}")) {
+    const grouped = recipients.reduce((acc, recipient: any) => {
+      const phone = typeof recipient === "string" ? recipient : recipient.phone;
+      const name = typeof recipient === "string" ? "" : recipient.name || "";
+      const title = typeof recipient === "string" ? "" : recipient.title || "";
+      let msgToSend = message.replace(/{name}/g, name || "Member");
+      if (title) {
+        msgToSend = msgToSend.replace(/{title}/g, title);
+      } else {
+        msgToSend = msgToSend.replace(/{title}\s?/g, ""); // Remove title placeholder if empty
+      }
+      acc[msgToSend] = acc[msgToSend] || [];
+      acc[msgToSend].push(phone);
+      return acc;
+    }, {} as Record<string, string[]>);
+
+    for (const [msg, phones] of Object.entries(grouped)) {
+      await sendArkeselSMS(phones, msg, scheduledFor || new Date());
+    }
+  } else {
+    const phones = recipients.map((r: any) =>
+      typeof r === "string" ? r : r.phone
+    );
+    await sendArkeselSMS(phones, message, scheduledFor || new Date());
+  }
 
   return apiResponse("SMS sent successfully", null);
 };
 
-export const getScheduledSMS = async (page: number = 1, limit: number = 10) => {
+export const getScheduledSMS = async (page: number = 1, limit: number = 50) => {
   const scheduledSMS = await prisma.scheduledSMS.findMany({
     orderBy: {
       scheduledFor: "desc",

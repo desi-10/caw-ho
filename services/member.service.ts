@@ -65,7 +65,7 @@ export const memberService = {
   /**
    * Fetch paginated list of members
    */
-  getList: async (page: number = 1, limit: number = 10) => {
+  getList: async (page: number = 1, limit: number = 50) => {
     const { data } = await axios.get<MemberListResponse>(
       `/api/member?page=${page}&limit=${limit}`
     );

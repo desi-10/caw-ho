@@ -24,8 +24,10 @@ import { FinanceDataSchema, TypeofFinanceData } from "@/validators/finance";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AddFinance = () => {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [members, setMembers] = useState<any[]>([]);
   const {
@@ -39,16 +41,17 @@ const AddFinance = () => {
   });
 
   useEffect(() => {
+    if (!open) return;
     const fetchUsers = async () => {
       try {
-        const { data } = await axios.get("/api/member?page=1&limit=1000");
+        const { data } = await axios.get("/api/member?page=1&limit=50");
         setMembers(data.data.members);
       } catch (error) {
         console.error("Failed to fetch members:", error);
       }
     };
     fetchUsers();
-  }, []);
+  }, [open]);
 
   const onSubmit = async (data: TypeofFinanceData) => {
     try {
@@ -57,7 +60,7 @@ const AddFinance = () => {
 
       setOpen(false);
       reset();
-      // window.location.reload();
+      // queryClient.invalidateQueries({ queryKey: ["finances"] });
     } catch (err) {
       if (err instanceof AxiosError) {
         toast.error(

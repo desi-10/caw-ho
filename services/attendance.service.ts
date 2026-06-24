@@ -45,7 +45,7 @@ export const attendanceService = {
   /**
    * Fetch paginated list of attendances
    */
-  getList: async (page: number = 1, limit: number = 10) => {
+  getList: async (page: number = 1, limit: number = 50) => {
     const { data } = await axios.get<AttendanceListResponse>(
       `/api/attendance?page=${page}&limit=${limit}`
     );

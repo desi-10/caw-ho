@@ -24,6 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EditMemberProps {
   member: any;
@@ -38,6 +39,7 @@ const EditMemberDialog = ({
   onOpenChange,
   onSuccess,
 }: EditMemberProps) => {
+  const queryClient = useQueryClient();
   const [preview, setPreview] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const {
@@ -62,6 +64,7 @@ const EditMemberDialog = ({
       setValue("phone", member.phone || "");
       setValue("address", member.address || "");
       setValue("userId", member.userId || "none");
+      setValue("gender", member.gender || null);
       setPreview(member.image || null);
     }
   }, [member, setValue]);
@@ -75,9 +78,10 @@ const EditMemberDialog = ({
   }, [imageFile]);
 
   useEffect(() => {
+    if (!open) return;
     const fetchUsers = async () => {
       try {
-        const response = await axios.get("/api/user?page=1&limit=1000");
+        const response = await axios.get("/api/user?page=1&limit=50");
         if (response.data.success && response.data.data) {
           setUsers(response.data.data.users || []);
         } else {
@@ -96,7 +100,7 @@ const EditMemberDialog = ({
     };
 
     fetchUsers();
-  }, []);
+  }, [open]);
 
   const onSubmit = async (data: TypeofMemberData) => {
     try {
@@ -123,7 +127,7 @@ const EditMemberDialog = ({
         onOpenChange(false);
         reset();
         setPreview(null);
-        window.location.reload();
+        queryClient.invalidateQueries({ queryKey: ["members"] });
       }
     } catch (err) {
       if (err instanceof AxiosError) {
@@ -230,12 +234,36 @@ const EditMemberDialog = ({
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="address">Address</Label>
-            <Input type="text" placeholder="Address" {...register("address")} />
-            {errors.address && (
-              <p className="text-sm text-red-500">{errors.address.message}</p>
-            )}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || undefined}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MALE">Male</SelectItem>
+                      <SelectItem value="FEMALE">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="address">Address</Label>
+              <Input type="text" placeholder="Address" {...register("address")} />
+              {errors.address && (
+                <p className="text-sm text-red-500">{errors.address.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="col-span-2 w-full">

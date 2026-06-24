@@ -6,7 +6,7 @@ import StatusCodes from "http-status-codes";
 import { ApiError } from "@/utils/api-error";
 import { findMemberById } from "./member.utils";
 
-export const getMembers = async (page: number = 1, limit: number = 10) => {
+export const getMembers = async (page: number = 1, limit: number = 50) => {
   const members = await prisma.member.findMany({
     orderBy: {
       createdAt: "desc",
@@ -30,7 +30,7 @@ export const getMembers = async (page: number = 1, limit: number = 10) => {
 };
 
 export const createMember = async (memberData: TypeofMemberData) => {
-  const { firstName, lastName, email, phone, address } = memberData;
+  const { firstName, lastName, email, phone, address, gender } = memberData;
 
   const existingMember = await prisma.member.findFirst({
     where: {
@@ -49,6 +49,7 @@ export const createMember = async (memberData: TypeofMemberData) => {
       email,
       phone,
       address,
+      gender,
       status: MemberStatus.ACTIVE,
     },
   });
@@ -68,7 +69,7 @@ export const updateMember = async (
   id: string,
   memberData: Partial<TypeofMemberData>
 ) => {
-  const { firstName, lastName, email, phone, address } = memberData;
+  const { firstName, lastName, email, phone, address, gender } = memberData;
 
   const existingMember = await findMemberById(id);
   if (!existingMember) {
@@ -77,7 +78,7 @@ export const updateMember = async (
 
   const updatedMember = await prisma.member.update({
     where: { id },
-    data: { firstName, lastName, email, phone, address },
+    data: { firstName, lastName, email, phone, address, gender },
   });
 
   return apiResponse("Member updated successfully", updatedMember);

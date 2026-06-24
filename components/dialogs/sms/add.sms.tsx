@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
-import { Loader2, Plus, MessageSquare, Users } from "lucide-react";
+import { Loader2, Plus, MessageSquare, Users, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,11 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AddSMS = () => {
   const [open, setOpen] = useState(false);
   const [members, setMembers] = useState<any[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [customNumbersInput, setCustomNumbersInput] = useState("");
+  const [customContacts, setCustomContacts] = useState<{name: string, phone: string, title?: string}[]>([]);
 
   type FormData = {
     message: string;
@@ -48,9 +51,10 @@ const AddSMS = () => {
   } = useForm<FormData>();
 
   useEffect(() => {
+    if (!open) return;
     const fetchMembers = async () => {
       try {
-        const response = await axios.get("/api/member?page=1&limit=1000");
+        const response = await axios.get("/api/member?page=1&limit=50");
         if (response.data.success) {
           const membersWithPhone = response.data.data.members.filter(
             (m: any) => m.phone
@@ -81,15 +85,51 @@ const AddSMS = () => {
     setSelectedMembers([]);
   };
 
+  const handleParseNumbers = () => {
+    const parsed = customNumbersInput
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+      .map((s) => {
+        const match = s.match(/^(.*?)([\d\s\-\+]{8,})$/);
+        if (match) {
+          const name = match[1].replace(/[:\-,\s]+$/, "").trim();
+          const phone = match[2].replace(/[\s\-]/g, "");
+          return { name, phone, title: "" };
+        }
+        return { name: "", phone: s.replace(/[\s\-]/g, ""), title: "" };
+      });
+    setCustomContacts((prev) => [...prev, ...parsed]);
+    setCustomNumbersInput("");
+  };
+
+  const removeCustomContact = (index: number) => {
+    setCustomContacts((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (data: FormData) => {
-    if (selectedMembers.length === 0) {
-      toast.error("Please select at least one recipient");
+    const memberRecipients = selectedMembers.map((phone) => {
+      const member = members.find((m) => m.phone === phone);
+      
+      let title = "";
+      if (member?.role === "PASTOR") title = "Pastor";
+      else if (member?.gender === "MALE") title = "Esteemed Brother";
+      else if (member?.gender === "FEMALE") title = "Esteemed Sister";
+      else title = "Sir/Madam"; // Default fallback
+
+      return { phone, name: member?.firstName || "", title };
+    });
+
+    const allRecipients = [...memberRecipients, ...customContacts];
+
+    if (allRecipients.length === 0) {
+      toast.error("Please select or add at least one recipient");
       return;
     }
 
     const payload = {
       message: data.message,
-      recipients: selectedMembers,
+      recipients: allRecipients,
       scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : null,
       dayOfWeek: 0,
       isRecurring: false,
@@ -101,6 +141,7 @@ const AddSMS = () => {
       setOpen(false);
       reset();
       setSelectedMembers([]);
+      setCustomContacts([]);
       // window.location.reload();
     } catch (err) {
       if (err instanceof AxiosError) {
@@ -214,53 +255,122 @@ const AddSMS = () => {
           </div>
 
           <div className="grid gap-3">
-            <div className="flex items-center justify-between">
-              <Label className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Select Recipients ({selectedMembers.length} selected)
-              </Label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={selectAll}
-                >
-                  Select All
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={deselectAll}
-                >
-                  Deselect All
-                </Button>
-              </div>
-            </div>
-
-            <div className="max-h-60 overflow-y-auto border rounded-md p-3 space-y-2">
-              {members.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No members with phone numbers found
-                </p>
-              ) : (
-                members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center gap-2 p-2 hover:bg-accent rounded-md"
-                  >
-                    <Checkbox
-                      checked={selectedMembers.includes(member.phone)}
-                      onCheckedChange={() => toggleMember(member.phone)}
-                    />
-                    <label className="flex-1 cursor-pointer text-sm">
-                      {member.firstName} {member.lastName} - {member.phone}
-                    </label>
+            <Tabs defaultValue="members" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="members">Members</TabsTrigger>
+                <TabsTrigger value="custom">Custom Contacts</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="members" className="space-y-3 mt-4">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Select ({selectedMembers.length} selected)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={selectAll}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={deselectAll}
+                    >
+                      Clear
+                    </Button>
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+
+                <div className="max-h-60 overflow-y-auto border rounded-md p-3 space-y-2">
+                  {members.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No members with phone numbers found
+                    </p>
+                  ) : (
+                    members.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center gap-2 p-2 hover:bg-accent rounded-md"
+                      >
+                        <Checkbox
+                          checked={selectedMembers.includes(member.phone)}
+                          onCheckedChange={() => toggleMember(member.phone)}
+                        />
+                        <label className="flex-1 cursor-pointer text-sm">
+                          {member.firstName} {member.lastName} - {member.phone}
+                        </label>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="custom" className="space-y-3 mt-4">
+                <div className="grid gap-2">
+                  <Label>Add External Numbers</Label>
+                  <div className="flex gap-2">
+                    <textarea
+                      value={customNumbersInput}
+                      onChange={(e) => setCustomNumbersInput(e.target.value)}
+                      placeholder="Paste numbers here (e.g. John - 0241234567, 0551234567)"
+                      className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <Button type="button" variant="secondary" onClick={handleParseNumbers} disabled={!customNumbersInput.trim()}>
+                    Parse & Add
+                  </Button>
+                </div>
+
+                {customContacts.length > 0 && (
+                  <div className="max-h-60 overflow-y-auto border rounded-md p-3 space-y-2">
+                    <Label className="mb-2 block text-xs font-semibold text-muted-foreground">Added Contacts ({customContacts.length})</Label>
+                    {customContacts.map((contact, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 bg-accent/50 rounded-md gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1">
+                          <Select 
+                            value={contact.title || "none"} 
+                            onValueChange={(val) => {
+                              const newContacts = [...customContacts];
+                              newContacts[idx].title = val === "none" ? "" : val;
+                              setCustomContacts(newContacts);
+                            }}
+                          >
+                            <SelectTrigger className="w-[110px] h-8 text-xs">
+                              <SelectValue placeholder="Title" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No Title</SelectItem>
+                              <SelectItem value="Mr">Mr.</SelectItem>
+                              <SelectItem value="Mrs">Mrs.</SelectItem>
+                              <SelectItem value="Miss">Miss</SelectItem>
+                              <SelectItem value="Dr">Dr.</SelectItem>
+                              <SelectItem value="Prof">Prof.</SelectItem>
+                              <SelectItem value="Esteemed Brother">Esteemed Brother</SelectItem>
+                              <SelectItem value="Esteemed Sister">Esteemed Sister</SelectItem>
+                              <SelectItem value="Pastor">Pastor</SelectItem>
+                              <SelectItem value="Sir">Sir</SelectItem>
+                              <SelectItem value="Madam">Madam</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <span className="text-sm">
+                            {contact.name ? `${contact.name} - ` : ""}{contact.phone}
+                          </span>
+                        </div>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => removeCustomContact(idx)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           <DialogFooter>
