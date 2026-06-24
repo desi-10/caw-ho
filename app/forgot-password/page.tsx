@@ -35,7 +35,7 @@ const ForgotPasswordPage = () => {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsSubmitting(true);
     try {
-      await authClient.forgetPassword({
+      await authClient.requestPasswordReset({
         email: data.email,
         redirectTo: `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL || window.location.origin}/reset-password`,
       }, {
